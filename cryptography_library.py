@@ -2787,6 +2787,43 @@ def e_alberti(plaintext, key):
             ciphertext+=plainChar
     return ciphertext
 
+#-----------------------------------------
+# Parametes:    plaintext (str)
+#               key: (shiftString,shifts)
+# Return:       ciphertext (str)
+# Description:  Decryption using Shift Cipher
+#-----------------------------------------
+def d_shift(ciphertext, key):
+    direction = 'l' if key[1]== 'r' else 'r'
+    return e_shift(ciphertext, (key[0], direction))
+
+#-----------------------------------------
+# Parametes:    plaintext (str)
+#               key: (shiftString,shifts)
+# Return:       ciphertext (str)
+# Description:  Encryption using Shift Cipher
+#-----------------------------------------
+def e_shift(plaintext, key):
+    ciphertext = '' 
+    shifts, direction = key
+    alphabet = utilities.get_lower()
+    
+    if shifts < 0:
+        shifts *= -1
+        direction = 'l' if key[1] == 'r' else 'r'
+    shifts = key[0] % 26
+    shifts = shifts if key[1] == 'l' else 26 - shifts
+
+    for char in plaintext:                          
+        if char.lower() in alphabet:
+            plaintext_index = alphabet.index(char.lower())    
+            ciphertext_index = (plaintext_index + shifts) % 26        
+            result = alphabet[ciphertext_index]
+            ciphertext += result.upper() if char.isupper() else result 
+        else:
+            ciphertext += char
+    return ciphertext
+    
 #-----------------------------------------------------------
 # Parameters:   ciphertext (str)
 # Return:       plaintext (str)
