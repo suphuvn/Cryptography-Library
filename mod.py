@@ -292,15 +292,14 @@ def mul_table(m):
 # Errors        None
 #-----------------------------------------------------------
 def is_prime(n):
-    # your code here
-    if n > 1:
-        for i in range(2, n):
-            if (n % i) == 0:
-                return False
-            else:
-                return True
-            
-    return False
+    if n == 1:
+        return False
+    if n == 2:
+        return True
+    for i in range(2, n):
+        if (n % i) == 0:
+            return False
+    return True
 
 #-----------------------------------------------------------
 # Parameters:   a (an integer)
