@@ -1,17 +1,36 @@
+# author Duc Nguyen
 import random
 import string
 import math
 
 # 1- get_lower()
-# 2- shift_string(s,n,d)
-# 3- get_B6Code()
-# 4- bin_to_dec(b)
-# 5- is_binary(b)
-# 6- dec_to_bin(decimal,size)
-# 7- xor(a,b)
-# 8- get_undefined(text,base)
-# 9- insert_undefinedList(text, undefinedList)
-# 10- remove_undefined(text,base)
+# 2- get_baseString()
+# 3- load_dictionary(dictFile)
+# 4- analyze_text(text, dictFile)
+# 5- text_to_words(text)
+# 6- is_plaintext(text, dictFile, threshold)
+# 7- new_matrix(r,c,pad)
+# 8- shift_string(s,n,d)
+# 9- get_B6Code()
+# 10- bin_to_dec(b)
+# 11- is_binary(b)
+# 12- dec_to_bin(decimal,size)
+# 13- xor(a,b)
+# 14- get_undefined(text,base)
+# 15- insert_undefinedList(text, undefinedList)
+# 16- remove_undefined(text,base)
+# 17- file_to_text(filename)
+# 18- text_to_file(text, filename)
+# 19- get_chiSquared(text)
+# 20- get_freqTable()
+# 21- get_charCount(text)
+# 22- text_to_blocks(text,size)
+# 23- compare_files(file1,file2)
+# 24- remove_nonalpha(text)
+# 25- get_nonalpha(text)
+# 26- insert_nonalpha(text, nonAlpha)
+# 27- get_RSA_baseString()
+
 #-----------------------------------------------------------
 # Parameters:   None 
 # Return:       alphabet (string)
@@ -19,6 +38,124 @@ import math
 #-----------------------------------------------------------
 def get_lower():
     return "".join([chr(ord('a')+i) for i in range(26)])
+
+#-----------------------------------------------------------
+# Parameters:   None 
+# Return:       baseString (string)
+# Description:  Return a string composed of:
+#               alphabet (lower case) (26 symbols)
+#               space
+#               digits (10 symbols)
+#               punctuations (defined in string library) (32 symbols)
+#               new line character
+#               Total number of characters = 70
+
+#-----------------------------------------------------------
+def get_baseString():
+    alphabet = get_lower() # 26 symbols
+    nums = ''.join([str(i) for i in range(10)]) #10 sybmols
+    punctuations = string.punctuation #32 sybmols
+    return alphabet + ' '+nums + punctuations + '\n'  #70 symbols
+
+
+#-----------------------------------------------------------
+# Parameters:   dictFile (string): filename
+# Return:       list of words (list)
+# Description:  Reads a given dictionary file
+#               dictionary file is assumed to be formatted: each word in a separate line
+#               Returns a list of lists, list[0] contains all words starting with 'a'
+#               list[1] all words starting with 'b' and so forth.
+#-----------------------------------------------------------
+def load_dictionary(dictFile):
+    alphabet = get_lower()
+    inFile = open(dictFile, 'r',encoding=" ISO-8859-15") 
+    dictWords = inFile.readlines()
+    dictList = [[] for i in range(26)]
+    for w in dictWords:
+        word = w.strip('\n')
+        dictList[alphabet.index(word[0])]+=[word]
+    inFile.close()
+    return dictList
+
+#-------------------------------------------------------------------
+# Parameters:   text (string)
+# Return:       list of words (list)
+# Description:  Reads a given text
+#               Each word is saved as an element in a list. 
+#               Returns a list of strings, each pertaining to a word in file
+#               Gets rid of all punctuation at the start and at the end 
+#-------------------------------------------------------------------
+def text_to_words(text):
+    wordList = []
+    lines = text.split('\n')
+    for line in lines:
+        line = line.strip('\n')
+        line = line.split(' ')
+        for i in range(len(line)):
+            if line[i] != '':
+                line[i] = line[i].strip(string.punctuation)
+                wordList+=[line[i]]
+    return wordList
+
+#-----------------------------------------------------------
+# Parameters:   text (string)
+#               dictList (list of lists)
+# Return:       (#matches, #mismatches)
+# Description:  Reads a given text, checks if each word appears in dictionary
+#               Returns a tuple of number of matches and number of mismatches.
+#               Words are compared in lowercase.
+#-----------------------------------------------------------
+def analyze_text(text, dictList):
+    wordList = text_to_words(text)
+    alphabet = get_lower()
+    matches = 0
+    mismatches = 0
+    for w in wordList:
+        if w.isalpha():
+            listNum = alphabet.index(w[0].lower())
+            if w.lower() in dictList[listNum]:
+                matches+=1
+            else:
+                mismatches+=1
+        else:
+            mismatches+=1
+    return(matches,mismatches)
+
+#-----------------------------------------------------------
+# Parameters:   text (string)
+#               dictList (list of lists)
+#               threshold (float): number between 0 to 1
+# Return:       True/False
+# Description:  Check if a given file is a plaintext
+#               If #matches/#words >= threshold --> True
+#                   otherwise --> False
+#               If invalid threshold given, default is 0.9
+#               An empty string is assumed to be non-plaintext.
+#-----------------------------------------------------------
+def is_plaintext(text, dictList, threshold):
+    if text == '':
+        return False
+    result = analyze_text(text, dictList)
+    percentage = result[0]/(result[0]+result[1])
+    if threshold < 0 or threshold > 1:
+        threshold = 0.9
+    if percentage >= threshold:
+        return True
+    return False
+
+#-----------------------------------------------------------
+# Parameters:   r: #rows (int)
+#               c: #columns (int)
+#               pad (str,int,double)
+# Return:       empty matrix (2D List)
+# Description:  Create an empty matrix of size r x c
+#               All elements initialized to pad
+#               Default row and column size is 2
+#-----------------------------------------------------------
+def new_matrix(r,c,pad):
+    r = r if r >= 2 else 2
+    c = c if c>=2 else 2
+    return [[pad] * c for i in range(r)]
 
 #-------------------------------------------------------------------
 # Parameters:   s (string): input string
@@ -196,25 +333,18 @@ def remove_undefined(text,base):
             modifiedText += c
     return modifiedText
 
-#--------------------------
-# Your Name and ID   <--------------------- Change this -----
-# CP460 (Fall 2019)
-# Midterm Student Utilities File
-#--------------------------
-
-#-----------------------------------------------
-# Remember to change the name of the file to:
-#               utilities.py
-# Delete this box after changing the file name
-# ----------------------------------------------
-
-#----------------------------------------------
-# You can not add any library other than these:
-import math
-import string
-import random
-ASCII_SIZE = 256
-#----------------------------------------------
+#-----------------------------------------------------------
+# Parameters:   text (string)
+#               filename (string)            
+# Return:       none
+# Description:  Utility function to write any given text to a file
+#               If file already exist, previous content will be over-written
+#-----------------------------------------------------------
+def text_to_file(text, filename):
+    outFile = open(filename,'w')
+    outFile.write(text)
+    outFile.close()
+    return
 
 #-----------------------------------------------------------
 # Parameters:   fileName (string)
@@ -227,292 +357,6 @@ def file_to_text(fileName):
     contents = inFile.read()
     inFile.close()
     return contents
-
-#-----------------------------------------------------------
-# Parameters:   None
-# Return:       baseString (str)
-# Description:  Returns base string for substitution cipher
-#-----------------------------------------------------------
-def get_baseString():
-    #generate alphabet
-    alphabet = ''.join([chr(ord('a')+i) for i in range(26)])    
-    symbols = """.,; #"?'!:-"""     #generate punctuations
-    return alphabet + symbols
-
-#-----------------------------------------------------------
-# Parameters:   key (str)
-# Return:       key (str)
-# Description:  Utility function for Substitution cipher
-#               Exchanges '#' wiht '\n' and vice versa
-#-----------------------------------------------------------
-def adjust_key(key):
-    if '#' in key:
-        newLineIndx = key.index('#')
-        key = key[:newLineIndx]+'\n'+key[newLineIndx+1:]
-    else:
-        newLineIndx = key.index('\n')
-        key = key[:newLineIndx]+'#'+key[newLineIndx+1:]
-    return key
-
-#-------------------------------------------------------------------------------------
-# Parameters:   ciphertext (str)
-#               baseString (str)
-# Return:       None
-# Description:  A debugging tool for substitution cipher
-#---------------------------------------------------------------------------------------
-def debug_substitution(ciphertext,baseString):
-    subString = ['-' for i in range(len(baseString))]
-    plaintext = ['-' for i in range(len(ciphertext))]
-    print('Ciphertext:')
-    print(ciphertext[:200])
-    print()
-    command = input('Debug Mode: Enter Command: ')
-    description = input('Description: ')
-    print()
-    
-    while command != 'end':
-        subChar = command[8].lower()
-        baseChar  = command[15].lower()
-
-        if subChar == '#':
-            subChar = '\n'
-        if baseChar == '#':
-            baseChar = '\n'
-            
-        if baseChar in baseString:
-            indx = baseString.index(baseChar)
-            subString[indx] = subChar
-        else:
-            print('(Error): Base Character does not exist!\n')
-
-           
-        print('Base:',end='')
-        for i in range(len(baseString)):
-            if baseString[i] == '\n':
-                print('# ',end='')
-            else:
-                print('{} '.format(baseString[i]),end='')
-        print()
-        print('Sub :',end='')
-        for i in range(len(subString)):
-            if subString[i] == '\n':
-                print('# ',end='')
-            else:
-                print('{} '.format(subString[i]),end='')
-        print('\n')
-
-        print('ciphertext:')
-        print(ciphertext[:200]) # <---- you can edit this if you need to show more text
-        for i in range(len(plaintext)):
-            if ciphertext[i].lower() == subChar:
-                if subChar == '#' or subChar == '\n':
-                    plaintext[i] == '\n'
-                else:
-                    plaintext[i] = baseChar
-        print('plaintext :')
-        print("".join(plaintext[:200])) # <---- you can edit this if you need to show more text
-        print('\n_______________________________________\n')
-        command = input('Enter Command: ')
-        description = input('Description: ')
-        print()
-    return
-
-# you can add any utility functions as you like
-#-----------------------------------------------------------
-# Parameters:   r: #rows (int)
-#               c: #columns (int)
-#               pad (str,int,double)
-# Return:       empty matrix (2D List)
-# Description:  Create an empty matrix of size r x c
-#               All elements initialized to pad
-#               Default row and column size is 2
-#-----------------------------------------------------------
-def new_matrix(r,c,pad):
-    r = r if r >= 2 else 2
-    c = c if c>=2 else 2
-    return [[pad] * c for i in range(r)]
-
-#-----------------------------------------------------------
-# Parameters:   dictFile (string): filename
-# Return:       list of words (list)
-# Description:  Reads a given dictionary file
-#               dictionary file is assumed to be formatted: each word in a separate line
-#               Returns a list of strings, each pertaining to a dictionary word
-#-----------------------------------------------------------
-def load_dictionary(dictFile):
-    dictList = []
-    # your code here
-    fv = open(dictFile, "r", encoding="mbcs")
-    line = fv.readline()
-    while line != "":
-        dictList.append(line.strip('\n'))
-        line = fv.readline()
-    return dictList
-
-#-------------------------------------------------------------------
-# Parameters:   text (string)
-# Return:       list of words (list)
-# Description:  Reads a given text
-#               Each word is saved as an element in a list. 
-#               Returns a list of strings, each pertaining to a word in file
-#               Gets rid of all punctuation at the start and at the end 
-#-------------------------------------------------------------------
-def text_to_words(text):
-    wordList = [x.strip(string.punctuation) for x in text.split()]
-    return wordList
-
-#-----------------------------------------------------------
-# Parameters:   text (string)
-#               dictFile (string): dictionary file
-# Return:       (#matches, #mismatches)
-# Description:  Reads a given text, checks if each word appears in dictionary
-#               Returns a tuple of number of matches and number of mismatches.
-#               Words are compared in lowercase.
-#-----------------------------------------------------------
-def analyze_text(text, dictFile):
-    matches = 0
-    mismatches = 0
-    # your code here
-    dictList = load_dictionary(dictFile)
-    wordList = text_to_words(text)
-    for word in wordList:
-        if word.lower() in dictList:
-            matches += 1
-        else:
-            mismatches += 1
-    return(matches,mismatches)
-
-#-----------------------------------------------------------
-# Parameters:   text (string)
-#               dictFile (string): dictionary file
-#               threshold (float): number between 0 to 1
-# Return:       True/False
-# Description:  Check if a given file is a plaintext
-#               If #matches/#words >= threshold --> True
-#                   otherwise --> False
-#               If invalid threshold given, default is 0.9
-#               An empty string is assumed to be non-plaintext.
-#-----------------------------------------------------------
-def is_plaintext(text, dictFile, threshold):
-    # your code here
-    if text == '':
-        return False
-    
-    if not (threshold >= 0.0 and threshold <= 1.0):
-        threshold = 0.9
-    (matches, mismatches) = analyze_text(text, dictFile)
-    
-    total_words = matches + mismatches
-    if (matches / total_words) >= threshold:
-        return True
-    return False
-    
-#-----------------------------------------------------------
-# Parameters:   None 
-# Return:       squqre (list of strings)
-# Description:  Constructs Vigenere square as list of strings
-#               element 1 = "abcde...xyz"
-#               element 2 = "bcde...xyza" (1 shift to left)
-#-----------------------------------------------------------
-def get_vigenereSquare():
-    alphabet = get_alphabet()
-    return [shift_string(alphabet,i,'l') for i in range(26)]
-
-#-------------------------------------------------------------------
-# Parameters:   s (string): input string
-#               n (int): number of shifts
-#               d (str): direction ('l' or 'r')
-# Return:       s (after applying shift
-# Description:  Shift a given string by n shifts (circular shift)
-#               as specified by direction, l = left, r= right
-#               if n is negative, multiply by 1 and change direction
-#-------------------------------------------------------------------
-def shift_string(s,n,d):
-    if d != 'r' and d!= 'l':
-        print('Error (shift_string): invalid direction')
-        return ''
-    if n < 0:
-        n = n*-1
-        d = 'l' if d == 'r' else 'r'
-    n = n%len(s)
-    if s == '' or n == 0:
-        return s
-
-    s = s[n:]+s[:n] if d == 'l' else s[-1*n:] + s[:-1*n]
-    return s
-
-#-------------------------------------------------------------------
-# Parameters:   str (string): input string
-#               
-# Return:       c (most occuring char)
-# Description:  Finds the most occuring character
-#-------------------------------------------------------------------
-def getMaxOccuringChar(ciphertext, combined): 
-    c = 0
-    temp = 0
-
-    for i in range(len(combined)):
-        if ciphertext.count(combined[i]) > c:
-            c = ciphertext.count(combined[i])
-            temp = i
-
-    return temp
-  
-    return c
-
-#-----------------------------------------------------------
-# Parameters:   None
-# Return:       alphabet (str)
-# Description:  Returns alphabet
-#-----------------------------------------------------------
-def get_alphabet():
-    #generate alphabet
-    alphabet = ''.join([chr(ord('a')+i) for i in range(26)])    
-    return alphabet
-
-#-----------------------------------------------------------
-# Parameters:   None
-# Return:       alphabet (str)
-# Description:  Returns alphabet reversed
-#-----------------------------------------------------------
-def get_alphabet_reversed():
-    return get_alphabet()[::-1]
-#-----------------------------------
-# Parameters:   text (string)
-# Return:       modifiedText (string)
-# Description:  Removes all non-alpha characters from the given string
-#               Returns a string of only alpha characters upper case
-#-----------------------------------
-def remove_nonalpha(text):
-    modifiedText = ''
-
-    for c in text:
-        if c.isalpha():
-            modifiedText += c
-
-    return modifiedText
-
-#----------------------------------------------------------------
-# Parameters:   ciphertext(string)
-# Return:       key length (int)
-# Description:  Uses the Ciphertext Shift method to compute key length
-#               Attempts key lengths 1 to 20
-#---------------------------------------------------------------
-def getKeyL_shift(ciphertext):
-    k = 1
-    matches = []
-
-    for i in range(1, 21):
-        total_matches = 0
-        shift = ''
-        shift += ciphertext[i:] + ciphertext[:i]
-        for j in range(i, len(ciphertext)):
-            if ciphertext[j] == shift[j]:
-                total_matches += 1
-        matches.append(total_matches)
-    
-    k = matches.index(max(matches)) + 1
-    return k
 
 #-----------------------------------------------------------
 # Parameters:   text (string)
@@ -558,10 +402,91 @@ def get_freqTable():
 def get_charCount(text):
     return [text.count(chr(97+i))+text.count(chr(65+i)) for i in range(26)]
 
-#-----------------------------------------------------------
-# Parameters:   key_length (int) 
-# Return:       periods (list)
-# Description:  Gets the periods
-#-----------------------------------------------------------
-def get_periods(key_length):
-    return [''] * key_length
+#-----------------------------------------------------------------------------
+# Parameters:   text (string)
+#               size (int)
+# Return:       list of strings
+# Description:  Break a given string into strings of given size
+#               Result is provided in a list
+#------------------------------------------------------------------------------
+def text_to_blocks(text,size):
+    return [text[i*size:(i+1)*size] for i in range(math.ceil(len(text)/size))]
+
+#-----------------------------------------------------------------------------
+# Parameters:   file1 (string)
+#               file2 (string)
+# Return:       Comparison Result
+# Description:  Compares contents of file1 against contents of file2
+#               if identical --> return 'Identical'
+#               if non-identical --> return line number where mismatch occured
+#------------------------------------------------------------------------------
+def compare_files(file1,file2):
+    f1 = open(file1,'r')
+    f2 = open(file2,'r')
+    counter = 1
+    line1 = 'a'
+    line2 = 'b'
+    while True:
+        line1 = f1.readline()
+        line2 = f2.readline()
+        if line1 == '' and line2 == '':
+            return 'Identical'
+        if line1 != line2:
+            return 'Mismatch Line '+str(counter)
+        counter+=1 
+    f1.close()
+    f2.close()
+    return
+
+#-----------------------------------
+# Parameters:   text (string)
+# Return:       modifiedText (string)
+# Description:  Removes all non-alpha characters from the given string
+#               Returns a string of only alpha characters
+#-----------------------------------
+def remove_nonalpha(text):
+    modifiedText = ''
+    for char in text:
+        if char.isalpha():
+            modifiedText += char
+    return modifiedText
+
+#-----------------------------------
+# Parameters:   text (string)
+# Return:       nonalphaList (2D List)
+# Description:  Analyzes a given string
+#               Returns a list of non-alpha characters along with their positions
+#               Format: [[char1, pos1],[char2,post2],...]
+#               Example: get_nonalpha('I have 3 cents.') -->
+#                   [[' ', 1], [' ', 6], ['3', 7], [' ', 8], ['.', 14]]
+#-----------------------------------
+def get_nonalpha(text):
+    nonalphaList = []
+    for i in range(len(text)):
+        if not text[i].isalpha():
+            nonalphaList.append([text[i],i])
+    return nonalphaList
+
+#-----------------------------------
+# Parameters:   text (str)
+#               2D list: [[char1,pos1], [char2,pos2],...]
+# Return:       modifiedText (string)
+# Description:  inserts a list of nonalpha characters in the positions
+#-----------------------------------
+def insert_nonalpha(text, nonAlpha):
+    modifiedText = text
+    for item in nonAlpha:
+        modifiedText = modifiedText[:item[1]]+item[0]+modifiedText[item[1]:]
+    return modifiedText
+
+#-----------------------------------
+# Parameters:   None
+# Return:       baaseString (string)
+# Description:  returns a 96-character string to be used in RSA cryptography
+#-----------------------------------
+def get_RSA_baseString():
+    lower = get_lower() # 26 symbols
+    upper = lower.upper() # 26 symbols
+    nums = ''.join([str(i) for i in range(10)]) #10 sybmols
+    punctuations = string.punctuation #32 sybmols
+    return lower + upper + ' '+nums + punctuations + '\n'  #96 symbols

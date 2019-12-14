@@ -297,10 +297,6 @@ def e_polybius(plaintext, key):
         ciphertext = ciphertext + str(row) + str(col)
     return ciphertext
 
-#---------------------------------
-#       Problem 5                #
-#---------------------------------
-
 #-------------------------------------------------------
 # Parameters:   ciphertext(string)
 #               key (none)
@@ -312,32 +308,32 @@ def e_polybius(plaintext, key):
 #-------------------------------------------------------
 def d_polybius(ciphertext, key):
     plaintext = ''
-    decrypt = ''
-    ascii_value = 0
-
-    # your code here
-    if (len(ciphertext) - ciphertext.count('\n') + 1) % 2 != 0:
-        print("Invalid ciphertext! Decryption failed!")
-        return
+    square = get_polybius_square()
+    i = 0
+    if (len(ciphertext) - ciphertext.count('\n')) % 2 != 0:
+        print("Invalid ciphertext! Decrypton Failed!")
+        return ''
     
-    if not ciphertext.isdigit():
-        print("Invalid ciphertext! Decryption failed!")
-        return
-
-    for i in range(len(ciphertext)):
-        if ciphertext[i] == '\n':
+    while i <= len(ciphertext) - 2:
+        temp = [ciphertext[i], ciphertext[i + 1]]
+        if temp[0] == '\n':
             plaintext += '\n'
+            i += 1
+        elif temp[0].isdigit() and temp[1].isdigit():
+            if int(temp[0]) > 0 and int(temp[1]) > 0:
+                index = int((int(temp[0]) - 1) * 8 + int(temp[1])) - 1
+                i += 2
+                plaintext += square[index]
+            else:
+                print("Invalid ciphertext! Decrypton Failed!")
+                return ''
         else:
-            ascii_value = (int(ciphertext[i]) - 1) * 8 + ord(' ')
-            decrypt = chr(ascii_value)
-            plaintext += decrypt
-        i += 1
-
+            print("Invalid ciphertext! Decrypton Failed!")
+            return ''
+    if plaintext[-1] != '\n' and ciphertext[-1] == '\n':
+        plaintext += '\n'
     return plaintext
 
-#---------------------------------
-#Q1: Vigenere Cipher (Version 2) #
-#---------------------------------
 #-------------------------------------------------------------------------------------
 # Parameters:   plaintext(string)
 #               key (str): string of any length
@@ -465,11 +461,6 @@ def d_vigenere2(ciphertext, key):
     
     return plaintext
 
-
-#-------------------------------------
-#Q2: Vigenere Crytanalysis Utilities #
-#-------------------------------------
-
 #-----------------------------------------------------------------------------
 # Parameters:   text (string)
 #               size (int)
@@ -578,10 +569,6 @@ def getKeyL_shift(ciphertext):
     k = matches.index(max(matches)) + 1
     return k
 
-
-#---------------------------------
-#   Q3:  Block Rotate Cipher     #
-#---------------------------------
 #-----------------------------------------------------------
 # Parameters:   key (b,r)
 # Return:       updatedKey (b,r)
@@ -725,9 +712,7 @@ def cryptanalysis_blockRotate(ciphertext,b1,b2):
         print("Block Rotate Cryptanalysis Failed. No Key was found")
     return plaintext, key
 
-#---------------------------------
-#       Q4: Cipher Detector     #
-#---------------------------------
+
 #-----------------------------------------------------------
 # Parameters:   ciphertext (string)
 # Return:       cipherType (string)
@@ -781,9 +766,6 @@ def get_cipherType(ciphertext):
         cipherType = "Unknown"
     return cipherType
 
-#-------------------------------------
-#  Q5: Wheastone Playfair Cipher     #
-#-------------------------------------
 #-----------------------------------------------------------
 # Parameters:   plaintext (string)
 # Return:       modifiedPlain (string)
@@ -906,9 +888,6 @@ def d_playfair(ciphertext, key):
     plaintext = " ".join(plaintext[i:i + 2] for i in range(0, len(plaintext), 2))
     return plaintext
 
-#---------------------------------
-#  Q1: Columnar Transposition    #
-#---------------------------------
 #-----------------------------------------------------------
 # Parameters:   key (string)           
 # Return:       keyOrder (list)
@@ -1028,11 +1007,6 @@ def d_columnarTrans(ciphertext,key):
             if sorted_matrix[j][i] != 'q':
                 plaintext += sorted_matrix[j][i]
     return plaintext
-
-
-#---------------------------------
-#   Q2: Permutation Cipher       #
-#---------------------------------
 
 #-----------------------------------------------------------
 # Parameters:   plaintext (str)
@@ -1168,9 +1142,6 @@ def d_permutation(ciphertext,key):
         return 'Error: (d_permutation) invalid mode'
     return plaintext
 
-#---------------------------------
-#       Q3: ADFGVX Cipher        #
-#---------------------------------
 #--------------------------------------------------------------
 # Parameters:   plaintext(string)
 #               key (string)
@@ -1238,9 +1209,6 @@ def d_adfgvx(ciphertext, key):
     plaintext = plaintext.strip()
     return plaintext
 
-#---------------------------------
-#       Q4: One Time Pad         #
-#---------------------------------
 #--------------------------------------------------------------
 # Parameters:   plaintext(string)
 #               key (string)
@@ -1299,9 +1267,6 @@ def xor_otp(char1,char2):
     result = chr(xor_result)
     return result
 
-#---------------------------------
-#    Q5: Myszkowski Cipher      #
-#---------------------------------
 #-----------------------------------------------------------
 # Parameters:   key (string)           
 # Return:       keyOrder (list)
@@ -1314,27 +1279,61 @@ def xor_otp(char1,char2):
 #               non-alpha characters sould be ignored
 #-----------------------------------------------------------
 def get_keyOrder_myszkowski(key):
-    if not isinstance(key, str) or key == '' or len(set(key.lower())) == 1 or len(set(key.lower())) == len(key):
-        return 'Error: Invalid Myszkowski Key [1, 1, 0]'
-    alphabet = utilities_A3.get_lower()
-    key_pos = list()
-    keyOrder = list()
+    if not isinstance(key, str) or not key:
+        print("Error: Invalid Myszkowski Key", end = ' ')
+        return [1, 1, 0]
+    
+    key = utilities.remove_nonalpha(key)
+    modified_key = {}
+    
+    i = 0
+    while i < len(key):
+        if key[i].lower() in modified_key:
+            modified_key[key[i].lower()] += 1
+        else:
+            modified_key[key[i].lower()] = 1
+        i += 1
+        
+    if len(modified_key) == 1:
+        return [1, 1, 0]
+    
+    duplicate = True
+    
+    i = 0
+    while i < len(modified_key):
+        if modified_key[key[i]] > 1:
+            duplicate = False
+        i += 1
 
-    for letter in key.lower():
-        if letter in alphabet:
-            key_pos.append(alphabet.index(letter))
-
-    if len(key_pos) == 0:
-        return 'Error: Invalid Myszkowski Key [1, 1, 0]'
-
-    key_pos_diffs = set(key_pos)
-    for pos in key_pos:
-        order_value = 0
-        for key_pos_diff in key_pos_diffs:
-            if pos > key_pos_diff:
-                order_value += 1
-        keyOrder.append(order_value)
-
+    if duplicate:
+        return [1, 1, 0]
+    
+    keyOrder = [0] * len(key)
+    temp = [0] * len(key)
+    
+    i = 0
+    while i < len(key):
+        temp[i] = ord(key[i].lower())
+        i += 1
+    temp.sort()
+    
+    i = 0
+    while i < len(key):
+        temp[i] = chr(temp[i]).lower()
+        i += 1
+        
+    unique_keys = [] 
+    
+    i = 0
+    while i < len(temp): 
+        if temp[i] not in unique_keys: 
+            unique_keys.append(temp[i])
+        i += 1 
+    
+    i = 0
+    while i < len(key):
+        keyOrder[i] = unique_keys.index(key[i].lower())
+        i += 1
     return keyOrder
 
 #--------------------------------------------------------------
@@ -1426,15 +1425,77 @@ def d_myszkowski(ciphertext,key):
                 plaintext += col[j][i]
     return plaintext
 
-#---------------------------------
-# Q1: Modular Arithmetic Library #
-#---------------------------------
+def cryptanalysis1_myszkowski(ciphertext):
+    plaintext = ''
+    dictFile = utilities.load_dictionary('engmix.txt')
+    keys = [['a', 'b', 'a'], ['b', 'b', 'a'], ['a', 'b', 'b'], ['b', 'a', 'b'], ['a', 'a', 'b'], ['b', 'a', 'a']]
+    count = 0
+    
+    for key in keys:
+        count += 1
+        result_key = key[0] + key[1] + key[2]
+        plaintext = d_myszkowski(ciphertext, result_key)
+        if utilities.is_plaintext(plaintext, dictFile, 0.9):
+            print("key found after", count, "attempts")
+            break
+    
+    key = ''.join(key)
+    return plaintext, key
 
-# solution is available in mod.py
+def cryptanalysis2_myszkowski(ciphertext, length):
+    plaintext = ''
+    keys = []
+    error_case = [1, 1, 0]
+    dictFile = utilities.load_dictionary('engmix.txt')
+    fv = open('engmix.txt', 'r', encoding='utf8', errors='ignore')
+    line = fv.readline()
+    
+    while line != '':
+        for word in line.split():
+            if len(word) == length and get_keyOrder_myszkowski(word) != error_case:
+                keys.append(word)
+        line = fv.readline()
+        
+    count = 0
+    for word in keys:
+        count += 1
+        plaintext = d_myszkowski(ciphertext, word)
+        if utilities.is_plaintext(plaintext, dictFile, 0.9):
+            print("key found after", count, "attempts")
+            break
+    key = word
+    fv.close()
+    return plaintext,key
 
-#---------------------------------
-#     Q2: Decimation Cipher      #
-#---------------------------------
+
+def cryptanalysis3_myszkowski(ciphertext):
+    plaintext = ''
+    keys = []
+    error_case = [1, 1, 0]
+    dictFile = utilities.load_dictionary('engmix.txt')
+    fv = open('engmix.txt', 'r', encoding ='utf8', errors = 'ignore')
+    line = fv.readline()
+    
+    while line != '':
+        for word in line.split():
+            unique_chars = set(word)
+            if len(word) == 5 and len(unique_chars) == 3:
+                for char in unique_chars:
+                    if word.count(char) == 3 and get_keyOrder_myszkowski(word) != error_case:
+                        keys.append(word)
+        line = fv.readline()
+        
+    count = 0
+    for word in keys:
+        count += 1
+        plaintext = d_myszkowski(ciphertext, word)
+        if utilities.is_plaintext(plaintext, dictFile, 0.9):
+            print("key found after", count, "attempts")
+            break
+    key = word
+    fv.close()
+    return plaintext,key
+
 #-----------------------------------------------------------
 # Parameters:   plaintext (str)
 #               key (str,int)
@@ -1548,9 +1609,6 @@ def cryptanalysis_decimation(ciphertext):
         x += 1
     return '', ''
 
-#---------------------------------
-#      Q3: Affine Cipher         #
-#---------------------------------
 #-----------------------------------------------------------
 # Parameters:   plaintext (str)
 #               key (str,[int,int])
@@ -1656,12 +1714,6 @@ def cryptanalysis_affine(ciphertext):
         x += 1
     return '',''
 
-#---------------------------------
-#      Q4: Matrix Library        #
-#---------------------------------
-
-# solution is available in matrix.py
-
 #-----------------------------------------------------------
 # Parameters:   plaintext (str)
 #               key (str)
@@ -1742,8 +1794,12 @@ def e_hill(plaintext,key):
 #                   print error msg and return empty string
 #-----------------------------------------------------------
 def d_hill(ciphertext,key):
-    if ciphertext is None or ciphertext == '':
-        print('Error (d_hill): invalid ciphertext')
+    plaintext = ''
+    alphabet = utilities.get_lower().upper()
+    key = key.upper()
+
+    if len(ciphertext) == 0:
+        print('Error(d_hill): invalid ciphertext')
         return ''
 
     if len(key) == 1:
@@ -1754,51 +1810,50 @@ def d_hill(ciphertext,key):
         key = key + key[0]
     elif len(key) > 4:
         key = key[:4]
+    
+    nonalpha = utilities.get_nonalpha(ciphertext)
+    modified_ciphertext = utilities.remove_nonalpha(ciphertext)
+    modified_ciphertext = modified_ciphertext.upper()
 
-    key = key.upper()
-    alphabet = utilities_A4.get_lower().upper()
+    if len(modified_ciphertext) % 2 != 0:
+        modified_ciphertext += 'Q'
+    
+    count_1, count_2 = 0, 0
+    text_matrix = matrix.new_matrix(2, int(len(modified_ciphertext) / 2), 0)
+    for i in range(len(modified_ciphertext)):
+        if i % 2 == 0:
+            text_matrix[0][count_1] = alphabet.find(modified_ciphertext[i])
+            count_1 += 1
+        else:
+            text_matrix[1][count_2] = alphabet.find(modified_ciphertext[i])
+            count_2 += 1
 
-    pos_1 = alphabet.index(key[0])
-    pos_2 = alphabet.index(key[1])
-    pos_3 = alphabet.index(key[2])
-    pos_4 = alphabet.index(key[3])
-
+    alphabet_key = 'ABCDE'
+    pos_1 = alphabet_key.index(key[0])
+    pos_2 = alphabet_key.index(key[1])
+    pos_3 = alphabet_key.index(key[2])
+    pos_4 = alphabet_key.index(key[3])
+    
     key_matrix = [[pos_1, pos_2], [pos_3, pos_4]]
     key_inv = matrix.inverse(key_matrix, len(alphabet))
 
-    if isinstance(key_inv, str):
-        print('Error (d_hill): key is not invertible')
-        return ''
+    for i in range(int(len(modified_ciphertext) / 2)):
+        a = text_matrix[0][i] * key_inv[0][0] + text_matrix[1][i] * key_inv[0][1]
+        b = text_matrix[0][i] * key_inv[1][0] + text_matrix[1][i] * key_inv[1][1]
+        plaintext += alphabet[a % len(alphabet)]
+        plaintext += alphabet[b % len(alphabet)]
+        
+    plaintext = utilities.insert_nonalpha(plaintext, nonalpha)
+    plaintext = plaintext.lower()
 
-    ciphertext = ciphertext.upper()
-    plaintext = ''
-
-    i = 0
-    while i < len(ciphertext):
-        if ciphertext[i].isalpha() and ciphertext[i + 1].isalpha():
-            first_char_pos = alphabet.index(ciphertext[i])
-            second_char_pos = alphabet.index(ciphertext[i + 1])
-            matrix_multiplied = matrix.mul(key_inv, [[first_char_pos], [second_char_pos]])
-            matrix_mod = matrix.matrix_mod(matrix_multiplied, len(alphabet))
-            plaintext += alphabet[matrix_mod[0][0]] + alphabet[matrix_mod[1][0]]
-            i += 2
-        else:
-            plaintext += ciphertext[i]
-            i += 1
-
-    while plaintext[-1] == 'Q':
-        plaintext = plaintext[:-1]
-
-    return plaintext.lower()
+    plaintext = plaintext.strip('q')
+    return plaintext
 
 configFile = 'SDES_config.txt'
 sbox1File = 'sbox1.txt'
 sbox2File = 'sbox2.txt'
 primeFile = 'primes.txt'
 
-#-----------------------
-# Q1: Coding Scheme
-#-----------------------
 #-----------------------------------------------------------
 # Parameters:   c (str): a character
 #               codeType (str)
@@ -1919,9 +1974,6 @@ def decode_B6(b):
     c = b6Code[dec_value]
     return c
 
-#-----------------------
-# Q2: SDES Configuration
-#-----------------------
 #-----------------------------------------------------------
 # Parameters:   None
 # Return:       paramList (list)
@@ -2039,9 +2091,6 @@ def config_SDES(parameter,value):
         return True
     return False
 
-#-----------------------
-# Q3: Key Generation
-#-----------------------
 #-----------------------------------------------------------
 # Parameters:   p (int)
 #               q (int)
@@ -2087,7 +2136,7 @@ def blum(p,q,m):
         seed = int(primes[n - 1])
 
     for i in range(m):
-        seed = seed ** 2
+        seed = (seed * seed) % n
         temp = mod.residue(seed ** 2, n)
         bitStream += '0' if temp % 2 == 0 else '1'
     return bitStream
@@ -2167,9 +2216,6 @@ def get_subKey(key,i):
     subKey = utilities.shift_string(key, i - 1, 'l')[:-1]
     return subKey
 
-#-----------------------
-# Q4: Fiestel Network
-#-----------------------
 #-----------------------------------------------------------
 # Parameters:   R (str): binary number of size (block_size/2)
 # Return:       output (str): expanded binary
@@ -2384,26 +2430,23 @@ def feistel(bi,ki):
     bi2 = prev_left + prev_right
     return bi2
 
-#----------------------------------
-# Q5: SDES Encryption/Decryption
-#----------------------------------
 #-----------------------------------------------------------
 # Parameters:   plaintext (str)
 #               key (str)
 # Return:       ciphertext (str)
 # Description:  Encryption using Simple DES
 #----------------------------------------------------------- 
-def e_SDES(plaintext,key):
+def e_SDES_ECB(plaintext,key):
     if not isinstance(plaintext, str):
-        print('Error (e_SDES): Invalid input')
+        print('Error (e_SDES_ECB): Invalid input')
         return ''
 
     if len(plaintext) == 0:
-        print('Error (e_SDES): Invalid input')
+        print('Error (e_SDES_ECB): Invalid input')
         return ''
 
     if get_SDES_value('encoding_type') == '' or get_SDES_value('block_size') == '' or get_SDES_value('key_size') == '' or get_SDES_value('rounds') == '':
-        print('Error (e_SDES): Invalid configuration')
+        print('Error (e_SDES_ECB): Invalid configuration')
         return ''
     
     key_size = int(get_SDES_value('key_size'))
@@ -2411,7 +2454,7 @@ def e_SDES(plaintext,key):
         key = generate_key_SDES()
 
     if len(key) != key_size:
-        print('Error (d_SDES): Invalid key')
+        print('Error (e_SDES_ECB): Invalid key')
         return ''
     
     block_size = int(get_SDES_value('block_size'))
@@ -2431,23 +2474,24 @@ def e_SDES(plaintext,key):
     ciphertext = utilities.insert_undefinedList(modified_ciphertext, undefined)
     return ciphertext
 
+
 #-----------------------------------------------------------
 # Parameters:   ciphertext (str)
 #               key (str)
 # Return:       plaintext (str)
 # Description:  Decryption using Simple DES
 #-----------------------------------------------------------
-def d_SDES(ciphertext,key):
+def d_SDES_ECB(ciphertext,key):
     if not isinstance(ciphertext, str):
-        print('Error (e_SDES): Invalid input')
+        print('Error (d_SDES_ECB): Invalid input')
         return ''
         
     if len(ciphertext) == 0:
-        print('Error (e_SDES): Invalid input')
+        print('Error (d_SDES_ECB): Invalid input')
         return ''
 
     if get_SDES_value('encoding_type') == '' or get_SDES_value('block_size') == '' or get_SDES_value('key_size') == '' or get_SDES_value('rounds') == '':
-        print('Error (e_SDES): Invalid configuration')
+        print('Error (d_SDES_ECB): Invalid configuration')
         return ''
 
     key_size = int(get_SDES_value('key_size'))
@@ -2455,7 +2499,7 @@ def d_SDES(ciphertext,key):
         key = generate_key_SDES()
 
     if len(key) != key_size:
-        print('Error (d_SDES): Invalid key')
+        print('Error (d_SDES_ECB): Invalid key')
         return ''
 
     block_size = int(get_SDES_value('block_size'))
@@ -2480,9 +2524,136 @@ def d_SDES(ciphertext,key):
     plaintext = ''.join(plaintext_list)
     return plaintext
 
-#---------------------------------
-#           Q3: Xshift           #
-#---------------------------------
+
+#-----------------------------------------------------------
+# Parameters:   block_size (str)
+# Return:       result (str)
+# Description:  Gets the initial vector
+#-----------------------------------------------------------
+def get_IV():
+    result = blum(643, 131, int(get_SDES_value('block_size')))
+    return result
+
+#-----------------------------------------------------------
+# Parameters:   plaintext (str)
+#               key (str)
+# Return:       ciphertext (str)
+# Description:  Encryption using Simple DES
+#----------------------------------------------------------- 
+def e_SDES_CBC(plaintext,key):
+    if not isinstance(plaintext, str):
+        print('Error (e_SDES_CBC): Invalid input')
+        return ''
+
+    if len(plaintext) == 0:
+        print('Error (e_SDES_CBC): Invalid input')
+        return ''
+
+    if get_SDES_value('encoding_type') == '' or get_SDES_value('block_size') == '' or get_SDES_value('key_size') == '' or get_SDES_value('rounds') == '':
+        print('Error (e_SDES_CBC): Invalid configuration')
+        return ''
+    
+    key_size = int(get_SDES_value('key_size'))
+    if key == '':
+        key = generate_key_SDES()
+
+    if len(key) != key_size:
+        print('Error (e_SDES): Invalid key')
+        return ''
+    
+    block_size = int(get_SDES_value('block_size'))
+    rounds = int(get_SDES_value('rounds'))
+    undefined = utilities.get_undefined(plaintext, utilities.get_B6Code())
+    modified_plaintext = utilities.remove_undefined(plaintext, utilities.get_B6Code())
+    modified_plaintext += 'Q' * ((block_size // 6 - (len(modified_plaintext) % (block_size // 6))) % (block_size // 6))
+    plain_bin = ''.join(map(lambda c: encode(c, 'B6'), modified_plaintext))
+    blocks = [plain_bin[i:i + block_size] for i in range(0, len(plain_bin), block_size)]
+
+    cipher_bin = ''
+    iv = get_IV()
+    for block in blocks:
+        block = utilities.xor(block, iv)
+        for i in range(rounds):
+            block = feistel(block, get_subKey(key, i+1))
+        block = block[block_size // 2:] + block[:block_size // 2]
+        cipher_bin += block
+        iv = block
+    
+    blocks = []
+    for i in range(0, len(cipher_bin), 6):
+        blocks.append(cipher_bin[i: i + 6])
+    
+    while len(blocks[-1]) != 6:
+        blocks[-1] += '0'
+        
+    ciphertext = ''
+    for block in blocks:
+        ciphertext += decode_B6(block)
+    ciphertext = utilities.insert_undefinedList(ciphertext, undefined)
+    
+    return ciphertext
+
+#-----------------------------------------------------------
+# Parameters:   ciphertext (str)
+#               key (str)
+# Return:       plaintext (str)
+# Description:  Decryption using Simple DES
+#----------------------------------------------------------- 
+def d_SDES_CBC(ciphertext,key):
+    if not isinstance(ciphertext, str):
+        print('Error (d_SDES_CBC): Invalid input')
+        return ''
+        
+    if len(ciphertext) == 0:
+        print('Error (d_SDES_CBC): Invalid input')
+        return ''
+
+    if get_SDES_value('encoding_type') == '' or get_SDES_value('block_size') == '' or get_SDES_value('key_size') == '' or get_SDES_value('rounds') == '':
+        print('Error (d_SDES_CBC): Invalid configuration')
+        return ''
+
+    key_size = int(get_SDES_value('key_size'))
+    if key == '':
+        key = generate_key_SDES()
+
+    if len(key) != key_size:
+        print('Error (d_SDES): Invalid key')
+        return ''
+
+    block_size = int(get_SDES_value('block_size'))
+    rounds = int(get_SDES_value('rounds'))
+    undefined = utilities.get_undefined(ciphertext, utilities.get_B6Code())
+    modified_ciphertext = utilities.remove_undefined(ciphertext, utilities.get_B6Code())
+    cipher_bin = ''.join(map(lambda c: encode(c, 'B6'), modified_ciphertext))
+    blocks = [cipher_bin[i:i + block_size] for i in range(0, len(cipher_bin), block_size)]
+    
+    plain_bin = ''
+    iv = get_IV()
+    for block in blocks:
+        temp = block
+        for i in range(rounds):
+            block = feistel(block, get_subKey(key, rounds - i))
+        block = block[block_size // 2:] + block[:block_size // 2]
+        block = utilities.xor(block, iv)
+        iv = temp
+        plain_bin += block
+    
+    blocks = []
+    for i in range(0, len(plain_bin), 6):
+        blocks.append(plain_bin[i: i + 6])
+    
+    while len(blocks[-1]) != 6:
+        blocks[-1] += '0'
+    
+    plaintext = ''
+    for block in blocks:
+        plaintext += decode_B6(block)    
+    plaintext = utilities.insert_undefinedList(plaintext, undefined)
+    
+    plaintext = plaintext.strip('Q')
+    plaintext = plaintext.strip('0')
+    
+    return plaintext
 
 #-----------------------------------------
 # Parametes:    plaintext (str)
@@ -2573,3 +2744,427 @@ def cryptanalysis_xshift(ciphertext):
         
     plaintext = d_xshift(ciphertext, key)
     return key, plaintext 
+
+#--------------------------------------------
+# Parameters: plaintext (string)
+#      key (string)
+# Return: ciphertext(string)
+# Description: Encryption using Atbash cipher
+#               There is no key (None)
+#---------------------------------------------
+
+def e_atbash(plaintext, key):
+    ciphertext = ""
+    alphabet = cryptoUtil.get_lower()
+    
+    for plainChar in plaintext:
+        if plainChar.isalpha(): #if alpha then check if its upper case changing cipher through equation if its upper case
+            upperFlag = True if plainChar.isupper() else False 
+            cipherChar = alphabet[25-alphabet.index(plainChar.lower())]
+            ciphertext += cipherChar.upper() if upperFlag else cipherChar
+        else:
+            ciphertext+=plainChar
+    return ciphertext
+
+#--------------------------------------------
+# Parameters: plaintext (string)
+#      key (string)
+# Return: ciphertext(string)
+# Description: Encryption using Atbash cipher
+#               There is no key (None)
+#---------------------------------------------
+
+def e_alberti(plaintext, key):
+    ciphertext = ""
+    alphabet = cryptoUtil.get_lowercase()
+    
+    for plainChar in plaintext:
+        if plainChar.isalpha(): #if alpha then check if its upper case changing cipher through equation if its upper case
+            upperFlag = True if plainChar.isupper() else False 
+            cipherChar = alphabet[25-alphabet.index(plainChar.lower())]
+            ciphertext += cipherChar.upper() if upperFlag else cipherChar
+        else:
+            ciphertext+=plainChar
+    return ciphertext
+
+#-----------------------------------------------------------
+# Parameters:   ciphertext (str)
+# Return:       plaintext (str)
+#               key (str)
+# Description:  Cryptanalysis of Polybius & Columnar Transposition
+#-----------------------------------------------------------
+def cryptanalysis_q4A(ciphertext):
+    ciphertext = d_polybius(ciphertext, None)
+    alphabet = utilities.get_lower()
+    dictList = utilities.load_dictionary('engmix.txt')
+    
+    for i in range(len(alphabet)):
+        for j in range(len(alphabet)):
+            key = alphabet[i] + alphabet[j]
+            plaintext = d_columnarTrans(ciphertext, key)
+            if utilities.is_plaintext(plaintext, dictList, 0.9):
+                return plaintext, key
+    
+    return '', 'not found'
+
+#-----------------------------------------------------------
+# Parameters:   ciphertext (str)
+# Return:       plaintext (str)
+#               key (str)
+#               (x, 'r') (tuple)
+# Description:  Cryptanalysis of Shift & Columnar Transposition
+#-----------------------------------------------------------
+def cryptanalysis_q4B(ciphertext):
+    alphabet = utilities.get_lower()
+    dictList = utilities.load_dictionary('engmix.txt')
+    
+    for x in range(26):
+        shift_plaintext = d_shift(ciphertext, (x, 'r'))
+        for i in range(len(alphabet)):
+            for j in range(len(alphabet)):
+                key = alphabet[i] + alphabet[j]
+                plaintext = d_columnarTrans(shift_plaintext, key)
+                if utilities.is_plaintext(plaintext, dictList, 0.9):
+                    return plaintext, key, (x, 'r') 
+    
+    return '', 'not found', (0, 'r')
+
+#-----------------------------------------------------------
+# Parameters:   ciphertext (str)
+# Return:       plaintext (str)
+#               key (str)
+#               (x, 'r') (tuple)
+# Description:  Cryptanalysis of Hill
+#-----------------------------------------------------------
+def cryptanalysis_q4C(ciphertext):
+    alphabet = utilities.get_lower()
+    dictList = utilities.load_dictionary('engmix.txt')
+    valid_keys = generate_valid_keys_q4C()
+        
+    for key in valid_keys:
+        plaintext = d_hill(ciphertext, key)
+        if utilities.is_plaintext(plaintext, dictList, 0.9):
+            return plaintext, key.lower(), (0, 'r')
+    return '', 'not found', (0, 'r')
+
+#-----------------------------------------------------------
+# Parameters:   N/A
+# Return:       valid_keys (list)
+# Description:  Generates all possible keys for Hill
+#-----------------------------------------------------------
+def generate_valid_keys_q4C():
+    alphabet_key = 'ABCDE'
+    alphabet = utilities.get_lower()
+    valid_keys = []
+    for i in range(len(alphabet_key)):
+        for j in range(len(alphabet_key)):
+            for k in range(len(alphabet_key)):
+                for l in range(len(alphabet_key)):
+                    key = alphabet_key[i] + alphabet_key[j] + alphabet_key[k] + alphabet_key[l]
+                    pos_1 = alphabet_key.index(key[0])
+                    pos_2 = alphabet_key.index(key[1])
+                    pos_3 = alphabet_key.index(key[2])
+                    pos_4 = alphabet_key.index(key[3])
+                    key_matrix = [[pos_1, pos_2], [pos_3, pos_4]]
+                    key_inv = matrix.inverse(key_matrix, len(alphabet))
+                    
+                    if not isinstance(key_inv, str):
+                        valid_keys.append(key)
+    return valid_keys
+
+def isValidKey_mathCipher(key):
+    # your code here
+    if not isinstance(key[0], str):
+        return False
+    
+    if len(key[0]) <= 2:
+        return False
+    
+    if not isinstance(key[1], list):
+        return False
+    
+    if len(key[1]) != 3:
+        return False
+    
+    a = key[1][0]
+    b = key[1][1]
+    
+    if not isinstance(a, int) or not isinstance(b, int):
+        return False
+    
+    if not mod.has_mul_inv(a, len(key[0])) or not mod.has_mul_inv(b, len(key[0])):
+        return False
+    return True
+    
+def e_mathCipher(plaintext, key):
+    # your code here
+    if not isValidKey_mathCipher(key):
+        print('Error(e_mathCipher): invalid key')
+        return ''
+    
+    if len(plaintext) == 0:
+        print('Error(e_mathCipher): invalid plaintext')
+        return ''
+    
+    ciphertext = ''
+    baseString = key[0]
+    a = key[1][0]
+    b = key[1][1]
+    c = key[1][2]
+    
+    for char in plaintext:
+        if char.lower() in baseString:
+            index = baseString.index(char.lower())
+            result = b * (a * index + b) - c
+            if result > len(baseString):
+                result %= len(baseString)
+            if char.isupper():
+                ciphertext += baseString[result].upper()
+            else:
+                ciphertext += baseString[result]
+        else:
+            ciphertext += char
+        
+    return ciphertext
+
+def d_mathCipher(ciphertext,key):
+    # your code here
+    if not isValidKey_mathCipher(key):
+        print('Error(d_mathCipher): invalid key')
+        return ''
+    
+    if len(ciphertext) == 0:
+        print('Error(d_mathCipher): invalid ciphertext')
+        return ''
+    
+    plaintext = ''
+    baseString = key[0]
+    a = key[1][0]
+    b = key[1][1]
+    c = key[1][2]
+    
+    for char in ciphertext:
+        if char.lower() in baseString:
+            index = baseString.index(char.lower())
+            a_inv = mod.mul_inv(a, len(baseString))
+            b_inv = mod.mul_inv(b, len(baseString))
+            result = (a_inv * (b_inv * ((index + c) % len(baseString)) - b)) % len(baseString)
+
+            if char.isupper():
+                plaintext += baseString[result].upper()
+            else:
+                plaintext += baseString[result]
+        else:
+            plaintext += char
+    return plaintext
+
+def analyze_mathCipher(baseString):
+    # your code here
+    total = len(baseString) ** 3
+    valid = 0
+    illegal = 0
+    noCipher = 0
+    decimation = 0 
+    
+    for a in range(len(baseString)):
+        if not mod.has_mul_inv(a, len(baseString)):
+            illegal += len(baseString) ** 2
+        else:
+            for b in range(len(baseString)):
+                if not mod.has_mul_inv(b, len(baseString)):
+                    illegal += len(baseString)
+                else:
+                    for c in range(len(baseString)):
+                        if (b * (a + b) - c) % len(baseString) == 1:
+                            noCipher += 1
+                        elif (b * (a + b) - c) % len(baseString) == a:
+                            decimation += 1
+                        else:
+                            valid += 1
+    noCipher -= decimation
+    valid = total - illegal - noCipher - decimation
+    return [total,illegal,noCipher,decimation,valid]
+
+def stats_mathCipher():
+    all_avg, all_best, all_worst, all_count = 0, 1, 0, 0 
+    prime_avg, prime_best, prime_worst, prime_count = 0, 1, 0, 0  
+    non_prime_avg, non_prime_best, non_prime_worst, non_prime_count = 0, 1, 0, 0
+    
+    i = 2
+    while i < 101:
+        analysis = analyze_mathCipher('0' * i)
+        valid_ratio = float(analysis[4]) / float(analysis[0])
+        all_avg += valid_ratio
+        
+        if (valid_ratio < all_best):
+            all_best = valid_ratio
+        if(valid_ratio > all_worst):
+            all_worst = valid_ratio
+            
+        if (mod.is_prime(i)):
+            prime_avg += valid_ratio           
+            if (valid_ratio < prime_best):
+                prime_best = valid_ratio
+            if(valid_ratio > prime_worst):
+                prime_worst = valid_ratio
+            prime_count += 1
+        else:
+            non_prime_avg += valid_ratio
+            if (valid_ratio < non_prime_best):
+                non_prime_best = valid_ratio
+            if(valid_ratio > non_prime_worst):
+                non_prime_worst = valid_ratio
+            non_prime_count += 1
+        all_count += 1
+        i += 1
+        
+    print('For all numbers:')
+    print('\tAverage = {0:.2f}%'.format(all_avg / all_count *100))
+    print('\tBest = {0:.2f}%'.format(all_best * 100))
+    print('\tWorst = {0:.2f}%'.format(all_worst * 100))
+    print('For Primes:')
+    print('\tAverage = {0:.2f}%'.format(prime_avg / prime_count * 100))
+    print('\tBest = {0:.2f}%'.format(prime_best * 100))
+    print('\tWorst = {0:.2f}%'.format(prime_worst * 100))
+    print('For non Primes:')
+    print('\tAverage = {0:.2f}%'.format(non_prime_avg / non_prime_count * 100))
+    print('\tBest = {0:.2f}%'.format(non_prime_best * 100))
+    print('\tWorst = {0:.2f}%'.format(non_prime_worst * 100))
+    return
+                            
+def cryptanalysis_mathCipher(ciphertext):
+    # your code here
+    baseString = utilities.get_baseString()
+    string_length = len(utilities.get_lower())
+    dictList = utilities.load_dictionary('engmix.txt')
+    plaintext = ''
+    count = 0
+    
+    while string_length < len(baseString):
+        for i in range(string_length):
+            if mod.has_mul_inv(i, string_length):
+                for j in range(string_length):
+                    if mod.has_mul_inv(j, string_length):
+                        for k in range(string_length):
+                            key = (baseString[:string_length], [i, j, k])
+                            if isValidKey_mathCipher(key) and (j * (i + j) - k) % len(baseString) != 1 and (j * (i + j) - k) % len(baseString) != i:
+                                count += 1
+                                plaintext = d_mathCipher(ciphertext, key)
+                                if utilities.is_plaintext(plaintext, dictList, 0.9):
+                                    print("key found after", count, "attempts")
+                                    return plaintext,key
+        string_length += 1
+    return '', 'not found'
+
+def get_RSAKey():
+    # your code here
+    # Private Key: Duc_Nguyen 16508983 25929077
+    # Public Key: Duc_Nguyen 428062691398691 32452885
+    name = 'Duc_Nguyen'
+    p = 16508983
+    q = 25929077
+    m = 428062691398691
+    n = 428062648960632                                                                                                                                                                    
+    e = 32452885
+    d = 413194195704085
+    return [name,p,q,m,n,e,d]
+
+def LRM(b,e,m):
+    # your code here
+    base = b % m
+    x = base 
+    e_binary = bin(e)[2:]
+    for i in e_binary[1:]:
+        base = (base * base) % m
+        if i == "1":
+            base = (x * base) % m
+    return base
+
+def encode_mod96(text):
+    baseString = utilities.get_RSA_baseString()
+    exp = 0
+    num = 1
+    
+    for char in text[::-1]:
+        index = baseString.index(char)
+        num += index * 96 ** exp
+        exp += 1
+    
+    num -= 1
+    return num
+
+def decode_mod96(num,block_size):
+    text = ''
+    baseString = utilities.get_RSA_baseString()
+    x = 1
+    y = 0
+    
+    for _ in range(block_size):
+        x = num // 96
+        y = num % 96
+        num = x
+        text += baseString[y]
+    
+    text = text[::-1]
+    return text
+
+def e_RSA(plaintext,key):
+    # your code here
+    ciphertext = ''
+    blocks = []
+    m = key[0]
+    e = key[1]
+    
+    for i in range(0, len(plaintext), 6):
+        block = plaintext[i:i + 6]
+        blocks.append(block)
+        
+    if len(blocks[-1]) != 6:
+        while len(blocks[-1]) != 6:
+            blocks[-1] += 'q'
+    
+    for block in blocks:
+        num = encode_mod96(block)
+        x = LRM(num, e, m)
+        result = decode_mod96(x, 8)
+        ciphertext += result
+    return ciphertext
+
+def d_RSA(ciphertext,key):
+    # your code here
+    plaintext = ''
+    m = key[0]
+    d = key[1]
+    blocks = []
+    
+    for i in range(0, len(ciphertext), 8):
+        block = ciphertext[i:i + 8]
+        blocks.append(block)
+    
+    for i in blocks:
+        num = encode_mod96(i)
+        x = LRM(num, d, m)
+        result = decode_mod96(x, 6)
+        plaintext += result
+    
+    plaintext = plaintext.strip('q')
+    return plaintext
+    
+def verify_RSA(message):
+    # your code here
+    fv = open('public_keys.txt', 'r')
+    line = fv.readline()
+    dictList = utilities.load_dictionary('engmix.txt')
+    
+    while line != '':
+        data = line.split(' ')
+        name = data[0]
+        m = int(data[1])
+        e = int(data[2])
+        key = (m , e)
+        plaintext = d_RSA(message, key)
+        if utilities.is_plaintext(plaintext, dictList, 0.9):
+            return name, plaintext
+        
+        line = fv.readline()
+    return 'author', 'message'
